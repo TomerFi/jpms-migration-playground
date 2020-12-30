@@ -41,6 +41,7 @@ The easiest solution is of course working my project as a non-modular one. Demon
 Another solution is to work my project as a modular one, making sure `foo` is on the module-path,</br>
 implicitly making it an `automatic-module` by requiring it by its unstable name.</br>
 Demonstrated in [this commit](https://github.com/TomerFi/jpms-migration-playground/tree/7755eec38d055dd98a003747d1dbc5d37a4f799d).</br>
+
 Note that when compiling, the compiler informs us of the usage of the `automatic module`:
 
 ```shell
@@ -59,7 +60,7 @@ This repository is actually created as part of an [issue](https://github.com/sor
 For clarification:
 
 - Our project in the works is [baz](https://github.com/TomerFi/jpms-migration-playground).
-- The non-modular jar [foo](/foo), is given to us (without the source file).
+- The non-modular jar [foo](/foo), is given to us (without the source files).
 - The non-modular jar [bar](/bar), is not given to us, nor do we need it.
 
 Our goal is to convert the non-modular jar for `foo`, to a modular one.
@@ -69,7 +70,7 @@ Our goal is to convert the non-modular jar for `foo`, to a modular one.
 First things first, let's create a `module-info` descriptor for `foo`.</br>
 This can be accomplished in two ways.
 
-From the command line (note the `--ignore-missing-deps` as we don't have `bar`.):
+From the command line (note the `--ignore-missing-deps` as we don't have `bar`):
 
 ```shell
 jdeps --generate-module-info .\target\descriptors --ignore-missing-deps .\lib\com\example\foo\0.0.1\foo-0.0.1.jar
@@ -83,34 +84,41 @@ module foo {
 }
 ```
 
-The same can also be accomplished in build time, using the `moditect` plugin.
-Even better, we can now give the module a stable name.
+The same can also be accomplished in build time, using the `moditect` plugin.</br>
+Even better, we can now give the module a stable name.</br>
 By convention, let's name it `com.example.foo`:
 
 ```xml
-<execution>
-    <id>generate-module-info</id>
-    <phase>initialize</phase>
-    <goals>
-        <goal>generate-module-info</goal>
-    </goals>
-    <configuration>
-        <outputDirectory>${project.build.directory}/descs</outputDirectory>
-        <modules>
-            <module>
-                <artifact>
-                    <groupId>com.example</groupId>
-                    <artifactId>foo</artifactId>
-                    <version>0.0.1</version>
-                </artifact>
-                <moduleInfo>
-                    <name>com.example.foo</name>
-                </moduleInfo>
-            </module>
-        </modules>
-        <jdepsExtraArgs>--ignore-missing-deps</jdepsExtraArgs>
-    </configuration>
-</execution>
+<plugin>
+    <groupId>org.moditect</groupId>
+    <artifactId>moditect-maven-plugin</artifactId>
+    <version>1.0.0.RC1</version>
+    <executions>
+        <execution>
+            <id>generate-module-info</id>
+            <phase>initialize</phase>
+            <goals>
+                <goal>generate-module-info</goal>
+            </goals>
+            <configuration>
+                <outputDirectory>${project.build.directory}/descs</outputDirectory>
+                <modules>
+                    <module>
+                        <artifact>
+                            <groupId>com.example</groupId>
+                            <artifactId>foo</artifactId>
+                            <version>0.0.1</version>
+                        </artifact>
+                        <moduleInfo>
+                            <name>com.example.foo</name>
+                        </moduleInfo>
+                    </module>
+                </modules>
+                <jdepsExtraArgs>--ignore-missing-deps</jdepsExtraArgs>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
 ```
 
 ### Create a modular jar from the non-modular one
@@ -121,28 +129,36 @@ We can create a new modular jar with it.
 This is easily accomplished with the `moditect` plugin:
 
 ```xml
-<execution>
-    <id>add-module-info</id>
-    <phase>initialize</phase>
-    <goals>
-        <goal>add-module-info</goal>
-    </goals>
-    <configuration>
-        <modules>
-            <module>
-                <artifact>
-                    <groupId>com.example</groupId>
-                    <artifactId>foo</artifactId>
-                </artifact>
-                <moduleInfoFile>${project.build.directory}/descs/com.example.foo/module-info.java</moduleInfoFile>
-            </module>
-        </modules>
-    </configuration>
-</execution>
+<plugin>
+    <groupId>org.moditect</groupId>
+    <artifactId>moditect-maven-plugin</artifactId>
+    <version>1.0.0.RC1</version>
+    <executions>
+        <execution>
+            <id>add-module-info</id>
+            <phase>initialize</phase>
+            <goals>
+                <goal>add-module-info</goal>
+            </goals>
+            <configuration>
+                <modules>
+                    <module>
+                        <artifact>
+                            <groupId>com.example</groupId>
+                            <artifactId>foo</artifactId>
+                        </artifact>
+                        <moduleInfoFile>${project.build.directory}/descs/com.example.foo/module-info.java</moduleInfoFile>
+                    </module>
+                </modules>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
 ```
 
 This will create a modified version `foo-0.0.1.jar` in `target\modules`,</br>
-The modified version will of course include the `module-info` descriptor, and will qualify as a `named module`.
+The modified version will of course include the `module-info` descriptor,</br>
+and will qualify as a `named module`.
 
 ### Instructing the project descriptors to use the modular jar
 
@@ -181,9 +197,9 @@ Note that for the test descriptor, we need to add a `requires` for reading `org.
 The reason we didn't need to do so before, is because `foo` was an `automatic module`,</br>
 It can read all other modules from the modulepath and all the `unnamed modules` from the classpath.
 
-Meaning it bridged between the `named modules` `com.example.baz` and `org.junit.jupiter.api`,
+Meaning it bridged between the `named modules` `com.example.baz` and `org.junit.jupiter.api`,</br>
 so we didn't need to explicitly read it.</br>
-Now that `com.example.foo` is a legit `named module` we need to explicitely to make `com.example.baz` read `org.junit.jupiter.api`.</br>
+Now that `com.example.foo` is a legit `named module` we need to explicitly make `com.example.baz` read `org.junit.jupiter.api`.</br>
 Failing to do so will result in a compilation error:
 
 ```shell
@@ -210,15 +226,18 @@ Basically one would just configure the compiler to include the new module:
 This, unfortunately, will not work in this case.</br>
 The original modulepath was constructed from the classpath,</br>
 Every non-modular jar is treated as an `unnamed module`.</br>
-This means, our jar will exist twice on the modulepath,
-once as an `unnamed module`, and once as a `named module` named `com.example.foo`.</br>
-When trying to compile the test classes that access the module, we'll get the obvious error:
+This means, our jar will exist twice on the modulepath, once as an `unnamed module`,</br>
+and once as a `named module` named `com.example.foo`.</br>
+
+When trying to compile the test classes that access the module,</br>
+we'll get the obvious error:
 
 ```shell
 [ERROR] .../src/test/java/module-info.java:[1,6] module com.example.baz reads package com.example.foo from both com.example.foo and foo
 ```
 
 This is where things get complicated!</br>
+
 To avoid the above error, one cannot just `upgrade-module-path`.</br>
 One needs to reconstruct the modulepath from scratch.
 
@@ -344,6 +363,7 @@ For this repository, I'm getting a diffrent error:
 ```
 
 If I understand this correctly,</br>
-I need to somehow remove the `foo` jar from the classpath of the plugin,
+I need to somehow remove the `foo` jar from the classpath of the plugin,</br>
 so it won't find its way to the modulepath as an `unnamed module`.</br>
+
 Similar to what I did for the compiler plugin.
