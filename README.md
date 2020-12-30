@@ -36,11 +36,11 @@ Basically, [baz](/) depends on [foo](/foo), without depending on [bar](/bar) and
 It will, however, throw a `NoClassDefFoundError` exception if we were to try an access [bar](/bar)'s classes.</br>
 This is demonstrated in [BazTest.java](/src/test/java/com/example/baz/BazTest.java).
 
-The easiest solution is of course working my project as a non-modular one. Demonstrated in [this commit](add-commit-link).
+The easiest solution is of course working my project as a non-modular one. Demonstrated in [this commit](https://github.com/TomerFi/jpms-migration-playground/tree/07ed726f752545f5c72a0d853ebe1feb47e18320).
 
 Another solution is to work my project as a modular one, making sure `foo` is on the module-path,</br>
 implicitly making it an `automatic-module` by requiring it by its unstable name.</br>
-Demonstrated in [this commit](add-commit-link).</br>
+Demonstrated in [this commit](https://github.com/TomerFi/jpms-migration-playground/tree/7755eec38d055dd98a003747d1dbc5d37a4f799dk).</br>
 Note that when compiling, the compiler informs us of the usage of the `automatic module`:
 
 ```shell
