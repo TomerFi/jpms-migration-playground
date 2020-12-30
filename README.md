@@ -295,7 +295,7 @@ We can use the [gmavenplus plugin](https://groovy.github.io/GMavenPlus/) to exec
             <scripts>
                 <script><![CDATA[
                     def file = new File("$project.build.directory/fixedClasspath.txt")
-                    project.properties.setProperty 'modulePath', file.text + ';' + "$project.build.directory/modules"]
+                    project.properties.setProperty 'modulePath', file.text + ';' + "$project.build.directory/modules"
                 ]]></script>
             </scripts>
         </configuration>
