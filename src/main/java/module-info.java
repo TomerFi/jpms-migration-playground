@@ -1,0 +1,3 @@
+module baz {
+  requires foo;
+}
