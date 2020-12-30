@@ -335,7 +335,7 @@ java.lang.module.FindException: Error reading module X
 Caused by: java.lang.module.InvalidModuleDescriptorException: Package Z not found in module
 ```
 
-I might have missed configured my work project.
+I might have misconfigured my work project.
 
 For this repository, I'm getting a diffrent error:
 
