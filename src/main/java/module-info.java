@@ -1,3 +1,3 @@
-module baz {
-  requires foo;
+module com.example.baz {
+  requires com.example.foo;
 }

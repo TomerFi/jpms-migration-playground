@@ -41,14 +41,125 @@
 
     <plugins>
       <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+        <version>1.0.0.RC1</version>
+        <executions>
+          <execution>
+            <id>generate-module-info</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>generate-module-info</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/descs</outputDirectory>
+              <modules>
+                <module>
+                  <artifact>
+                    <groupId>com.example</groupId>
+                    <artifactId>foo</artifactId>
+                    <version>0.0.1</version>
+                  </artifact>
+                  <moduleInfo>
+                    <name>com.example.foo</name>
+                  </moduleInfo>
+                </module>
+              </modules>
+              <jdepsExtraArgs>--ignore-missing-deps</jdepsExtraArgs>
+            </configuration>
+          </execution>
+          <execution>
+            <id>add-module-info</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>add-module-info</goal>
+            </goals>
+            <configuration>
+              <modules>
+                <module>
+                  <artifact>
+                    <groupId>com.example</groupId>
+                    <artifactId>foo</artifactId>
+                  </artifact>
+                  <moduleInfoFile>${project.build.directory}/descs/com.example.foo/module-info.java</moduleInfoFile>
+                </module>
+              </modules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-classpath-file</id>
+            <goals>
+              <goal>build-classpath</goal>
+            </goals>
+            <configuration>
+              <outputFile>${project.build.directory}/fixedClasspath.txt</outputFile>
+              <excludeArtifactIds>foo</excludeArtifactIds><!-- every aritifact recreated with moditect should be listed here -->
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.gmavenplus</groupId>
+        <artifactId>gmavenplus-plugin</artifactId>
+        <version>1.12.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-ant</artifactId>
+            <version>3.0.7</version>
+            <scope>runtime</scope>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>execute</goal>
+            </goals>
+            <configuration>
+              <scripts>
+                <script><![CDATA[
+                  def file = new File("$project.build.directory/fixedClasspath.txt")
+                  project.properties.setProperty 'modulePath', file.text + ';' + "$project.build.directory/modules"
+                ]]></script>
+              </scripts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <compilerArgs>
+            <arg>--module-path</arg>
+            <arg>${modulePath}</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <groupId>de.sormuras.junit</groupId>
         <artifactId>junit-platform-maven-plugin</artifactId>
         <version>1.1.0</version>
         <extensions>true</extensions>
         <configuration>
           <executor>JAVA</executor>
+          <tweaks>
+            <additionalTestPathElements>
+              <element>${project.build.directory}/modules/foo-0.0.1.jar</element>
+            </additionalTestPathElements>
+          </tweaks>
         </configuration>
       </plugin>
+
     </plugins>
 
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
