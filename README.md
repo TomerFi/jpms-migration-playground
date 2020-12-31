@@ -195,7 +195,7 @@ open module com.example.baz {
 Note that for the test descriptor, we need to add a `requires` for reading `org.junit.jupiter.api`.
 
 The reason we didn't need to do so before, is because `foo` was an `automatic module`,</br>
-It can read all other modules from the modulepath and all the `unnamed modules` from the classpath.
+It can read all other modules from the modulepath including the `unnamed module`.
 
 Meaning it bridged between the `named modules` `com.example.baz` and `org.junit.jupiter.api`,</br>
 so we didn't need to explicitly read it.</br>
@@ -225,8 +225,8 @@ Basically one would just configure the compiler to include the new module:
 
 This, unfortunately, will not work in this case.</br>
 The original modulepath was constructed from the classpath,</br>
-Every non-modular jar is treated as an `unnamed module`.</br>
-This means, our jar will exist twice on the modulepath, once as an `unnamed module`,</br>
+Every non-modular jar is treated as part of the `unnamed module`.</br>
+This means, our jar will exist twice on the modulepath, once inside the `unnamed module`,</br>
 and once as a `named module` named `com.example.foo`.</br>
 
 When trying to compile the test classes that access the module,</br>
@@ -364,6 +364,6 @@ For this repository, I'm getting a diffrent error:
 
 If I understand this correctly,</br>
 I need to somehow remove the `foo` jar from the classpath of the plugin,</br>
-so it won't find its way to the modulepath as an `unnamed module`.</br>
+so it won't find its way to the modulepath's `unnamed module`.</br>
 
 Similar to what I did for the compiler plugin.
