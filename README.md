@@ -353,6 +353,6 @@ That's it.</br>
 Everything now compiles and all the tests pass.</br>
 
 The key added value here is that now,</br>
-Both the project `baz` and the local dependency `foo` are both `named modules`,</br>
-And we are still missing `bar` of course.</br>
+Both the project `baz` and the local dependency `foo` are now `named modules`,</br>
+And, we are still missing `bar` of course.</br>
 Better yet, we can also use `moditect` to make `foo` stop exposing packages related to `bar`.
