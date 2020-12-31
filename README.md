@@ -10,16 +10,15 @@ But... I bumped into this situation at work,</br>
 so I figured I'll give it a try.
 
 - [Walkthrough](#walkthrough)
-- [Converting a non-modular dependency to a modular one](#converting-a-non-modular-dependency-to-a-modular-one)
+- [Converte a non-modular dependency to a modular one](#converte-a-non-modular-dependency-to-a-modular-one)
   - [Create a module-info descriptor](#create-a-module-info-descriptor)
   - [Create a modular jar from the non-modular one](#create-a-modular-jar-from-the-non-modular-one)
-  - [Instructing the project descriptors to use the modular jar](#instructing-the-project-descriptors-to-use-the-modular-jar)
+  - [Instructe the project descriptors to use the modular jar](#instructe-the-project-descriptors-to-use-the-modular-jar)
   - [Add the new module to the modulepath](#add-the-new-module-to-the-modulepath)
     - [Retrieve the classpath](#retrieve-the-classpath)
     - [Create a fixed modulepath](#create-a-fixed-modulepath)
     - [Configure the compiler with the new modulepath](#configure-the-compiler-with-the-new-modulepath)
     - [Configure junit-platform plugin to see the new module](#configure-junit-platform-plugin-to-see-the-new-module)
-- [Current status](#current-status)
 
 ## Walkthrough
 
@@ -55,7 +54,7 @@ But it can be tricky since we don't have, nor do we need, `bar`.
 For testing I'm using the [junit-platform plugin](https://github.com/sormuras/junit-platform-maven-plugin).</br>
 This repository is actually created as part of an [issue](https://github.com/sormuras/junit-platform-maven-plugin/issues/54) I'm trying to work out.
 
-## Converting a non-modular dependency to a modular one
+## Converte a non-modular dependency to a modular one
 
 For clarification:
 
@@ -160,7 +159,7 @@ This will create a modified version `foo-0.0.1.jar` in `target\modules`,</br>
 The modified version will of course include the `module-info` descriptor,</br>
 and will qualify as a `named module`.
 
-### Instructing the project descriptors to use the modular jar
+### Instructe the project descriptors to use the modular jar
 
 Simply update the `requires` statement in the source files.</br>
 From `foo`, the automatic module unstable name.</br>
@@ -336,34 +335,22 @@ requires some tweaking so it can see the new module:
     <configuration>
         <executor>JAVA</executor>
         <tweaks>
-        <additionalTestPathElements>
-            <element>${project.build.directory}/modules/foo-0.0.1.jar</element>
-        </additionalTestPathElements>
+            <additionalTestPathElements>
+                <element>${project.build.directory}/modules/foo-0.0.1.jar</element>
+            </additionalTestPathElements>
+            <dependencyExcludes>
+                <exclude>com.example:foo</exclude>
+            </dependencyExcludes>
         </tweaks>
     </configuration>
 </plugin>
 ```
 
-## Current status
+In a similar manner to the way the compiler plugin was patched,</br>
+In a much simpler way, we told `junit-platform plugin` to exclude the original non-modular `foo` and to add the modular one.
 
-This is where I got stuck!</br>
-For my work project, I got a different error:
+That's it.</br>
+Everthing now compiles and all the tests pass.</br>
 
-```shell
-java.lang.module.FindException: Error reading module X
-Caused by: java.lang.module.InvalidModuleDescriptorException: Package Z not found in module
-```
-
-I might have misconfigured my work project.
-
-For this repository, I'm getting a diffrent error:
-
-```shell
-[ERROR] java.lang.module.ResolutionException: Modules com.example.foo and foo export package com.example.foo to module org.junit.platform.commons
-```
-
-If I understand this correctly,</br>
-I need to somehow remove the `foo` jar from the classpath of the plugin,</br>
-so it won't find its way to the modulepath's `unnamed module`.</br>
-
-Similar to what I did for the compiler plugin.
+The key added value here is that now,</br>
+Both the project `baz` and the local dependency `foo` are both `named modules`.
