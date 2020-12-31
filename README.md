@@ -350,7 +350,9 @@ In a similar manner to the way the compiler plugin was patched,</br>
 In a much simpler way, we told `junit-platform plugin` to exclude the original non-modular `foo` and to add the modular one.
 
 That's it.</br>
-Everthing now compiles and all the tests pass.</br>
+Everything now compiles and all the tests pass.</br>
 
 The key added value here is that now,</br>
-Both the project `baz` and the local dependency `foo` are both `named modules`.
+Both the project `baz` and the local dependency `foo` are both `named modules`,</br>
+And we are still missing `bar` of course.</br>
+Better yet, we can also use `moditect` to make `foo` stop exposing packages related to `bar`.
