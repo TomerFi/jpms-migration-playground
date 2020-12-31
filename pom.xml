@@ -156,6 +156,9 @@
             <additionalTestPathElements>
               <element>${project.build.directory}/modules/foo-0.0.1.jar</element>
             </additionalTestPathElements>
+            <dependencyExcludes>
+              <exclude>com.example:foo</exclude>
+            </dependencyExcludes>
           </tweaks>
         </configuration>
       </plugin>
