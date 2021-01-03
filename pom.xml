@@ -39,6 +39,14 @@
   <build>
     <defaultGoal>test</defaultGoal>
 
+    <extensions>
+      <extension>
+        <groupId>kr.motd.maven</groupId>
+        <artifactId>os-maven-plugin</artifactId>
+        <version>1.6.2</version>
+      </extension>
+    </extensions>
+
     <plugins>
       <plugin>
         <groupId>org.moditect</groupId>
@@ -126,8 +134,9 @@
             <configuration>
               <scripts>
                 <script><![CDATA[
+                  def delimiter = project.properties['os.detected.name'] == 'windows' ? ';' : ':'
                   def file = new File("$project.build.directory/fixedClasspath.txt")
-                  project.properties.setProperty 'modulePath', file.text + ';' + "$project.build.directory/modules"
+                  project.properties.setProperty 'modulePath', file.text + delimiter + "$project.build.directory/modules"
                 ]]></script>
               </scripts>
             </configuration>
