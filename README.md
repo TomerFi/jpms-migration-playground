@@ -269,7 +269,17 @@ We now have the `target\fixedClasspath.txt` file with the content of the classpa
 
 #### Create a fixed modulepath
 
-We can use the [gmavenplus plugin](https://groovy.github.io/GMavenPlus/) to execute a small groovy script:
+We can use the [gmavenplus plugin](https://groovy.github.io/GMavenPlus/) to execute a small groovy script,
+To better accommodate both Windows and Linux os families, the [os plugin](https://github.com/trustin/os-maven-plugin) will create the `os.detected.name`.
+
+```xml
+<extension>
+    <groupId>kr.motd.maven</groupId>
+    <artifactId>os-maven-plugin</artifactId>
+    <version>1.6.2</version>
+</extension>
+```
+
 
 ```xml
 <plugin>
