@@ -13,7 +13,7 @@ so I figured I'll give it a try.
 - [Converte a non-modular dependency to a modular one](#converte-a-non-modular-dependency-to-a-modular-one)
   - [Create a module-info descriptor](#create-a-module-info-descriptor)
   - [Create a modular jar from the non-modular one](#create-a-modular-jar-from-the-non-modular-one)
-  - [Instructe the project descriptors to use the modular jar](#instructe-the-project-descriptors-to-use-the-modular-jar)
+  - [Instruct the project descriptors to use the modular jar](#instruct-the-project-descriptors-to-use-the-modular-jar)
   - [Add the new module to the modulepath](#add-the-new-module-to-the-modulepath)
     - [Retrieve the classpath](#retrieve-the-classpath)
     - [Create a fixed modulepath](#create-a-fixed-modulepath)
@@ -47,12 +47,14 @@ Note that when compiling, the compiler informs us of the usage of the `automatic
 [INFO] Required filename-based automodules detected: [foo-0.0.1.jar]. Please don't publish this project to a public artifact repository!
 ```
 
-The extreme solution, which is the one I'm playing around with in this repository.</br>
+This will not suffice, as we won't be able to realy make the best of `JPMS`, as `jlink` doesn't work `automatic modules`.
+
+The overall solution, which is the one I'm playing around with in this repository.</br>
 Is to _fix_ `foo`'s jar, making it a modular one, this is easily accomplished using the [moditect plugin](https://github.com/moditect/moditect).</br>
-But it can be tricky since we don't have, nor do we need, `bar`.
+But it can be tricky since we don't have, nor do we need, `bar`, and we prefer doing most of the work in build time and not manually.
 
 For testing I'm using the [junit-platform plugin](https://github.com/sormuras/junit-platform-maven-plugin).</br>
-This repository is actually created as part of an [issue](https://github.com/sormuras/junit-platform-maven-plugin/issues/54) I'm trying to work out.
+This repository was actually created as part of an [issue](https://github.com/sormuras/junit-platform-maven-plugin/issues/54) I'm trying to work out.
 
 ## Converte a non-modular dependency to a modular one
 
@@ -62,7 +64,7 @@ For clarification:
 - The non-modular jar [foo](/foo), is given to us (without the source files).
 - The non-modular jar [bar](/bar), is not given to us, nor do we need it.
 
-Our goal is to convert the non-modular jar for `foo`, to a modular one.
+Our goal is to convert the non-modular jar for `foo`, to a modular one so that `baz` can be devloped as fully modular project.
 
 ### Create a module-info descriptor
 
@@ -72,10 +74,10 @@ This can be accomplished in two ways.
 From the command line (note the `--ignore-missing-deps` as we don't have `bar`):
 
 ```shell
-jdeps --generate-module-info .\target\descriptors --ignore-missing-deps .\lib\com\example\foo\0.0.1\foo-0.0.1.jar
+jdeps --generate-module-info .\target\descs --ignore-missing-deps .\lib\com\example\foo\0.0.1\foo-0.0.1.jar
 ```
 
-This will create `.\target\descriptors\foo\module-info.java`:
+This will create `.\target\descs\foo\module-info.java`:
 
 ```java
 module foo {
@@ -84,7 +86,7 @@ module foo {
 ```
 
 The same can also be accomplished in build time, using the `moditect` plugin.</br>
-Even better, we can now give the module a stable name.</br>
+Better yet, we can now give the module a stable name.</br>
 By convention, let's name it `com.example.foo`:
 
 ```xml
@@ -159,7 +161,7 @@ This will create a modified version `foo-0.0.1.jar` in `target\modules`,</br>
 The modified version will of course include the `module-info` descriptor,</br>
 and will qualify as a `named module`.
 
-### Instructe the project descriptors to use the modular jar
+### Instruct the project descriptors to use the modular jar
 
 Simply update the `requires` statement in the source files.</br>
 From `foo`, the automatic module unstable name.</br>
@@ -194,9 +196,9 @@ open module com.example.baz {
 Note that for the test descriptor, we need to add a `requires` for reading `org.junit.jupiter.api`.
 
 The reason we didn't need to do so before, is because `foo` was an `automatic module`,</br>
-It can read all other modules from the modulepath including the `unnamed module`.
+It can read all other modules from the modulepath.
 
-Meaning it bridged between the `named modules` `com.example.baz` and `org.junit.jupiter.api`,</br>
+Meaning it bridged between the modules `com.example.baz` and `org.junit.jupiter.api`,</br>
 so we didn't need to explicitly read it.</br>
 Now that `com.example.foo` is a legit `named module` we need to explicitly make `com.example.baz` read `org.junit.jupiter.api`.</br>
 Failing to do so will result in a compilation error:
@@ -270,7 +272,7 @@ We now have the `target\fixedClasspath.txt` file with the content of the classpa
 #### Create a fixed modulepath
 
 We can use the [gmavenplus plugin](https://groovy.github.io/GMavenPlus/) to execute a small groovy script,
-To better accommodate both Windows and Linux os families, the [os plugin](https://github.com/trustin/os-maven-plugin) will create the `os.detected.name`.
+To better accommodate both Windows and Linux os families, we'll use the [os plugin](https://github.com/trustin/os-maven-plugin) to create the `os.detected.name`.
 
 ```xml
 <extension>
