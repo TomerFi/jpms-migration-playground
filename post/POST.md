@@ -1,23 +1,25 @@
 ---
 title: JPMS Migration Playground
-published: false
+published: true
 description: Playing around with modularizing monolithic jars.
 tags: ["java", "programming", "jpms", "jigsaw"]
 ---
 
-## JPMS Migration Playground
+## Playing around with modularizing monolithic jars
 
 This [repository][0] was created for playing around with modularizing monolithic jars.
 
 To be more precise,</br>
-I was trying to mimic a situation where I have a project depending on a monolithic jar from a local dependency,</br>
-which in itself, depends on a non-existing dependency, which is of no use to my project.
+I was trying to mimic a situation where I have a project depending on a monolithic jar from a local dependency, which in itself, depends on a non-existing dependency, which is of no use to my project.
 
 *My goal was to modularize the monolithic jar from the local dependency disregarding the non-existing dependency.*
 
 It might sound like a very specific end-case,</br>
 But... I bumped into this situation at work,</br>
 so I figured I'll give it a try. :smirk:
+
+Join me, if nothing else, we'll get a better understanding of `JPMS`.
+:nerd_face:
 
 ## Project Walkthrough
 
@@ -51,7 +53,7 @@ Note that when compiling, the compiler will inform me of the usage of an `automa
 [INFO] Required filename-based automodules detected: [foo-0.0.1.jar]. Please don't publish this project to a public artifact repository!
 ```
 
-This will not suffice, I won't be able to really make the best of `JPMS`.</br>
+This will not suffice, I won't be able to make the best of `JPMS`.</br>
 Features like `jlink` don't work with `automatic modules`. :disappointed:
 
 ### Third Solution
@@ -166,21 +168,26 @@ This is easily accomplished with the `moditect` plugin:
 ```
 
 This will create a modified version `foo-0.0.1.jar` in `target\modules`,</br>
-The modified version will of course include the `module-info` descriptor,</br>
-and will qualify as a `named module`.
-
-### Instruct the project descriptors to use the modularized jar
-
-Simply update the `requires` statement in the source files.</br>
-From `foo`, the automatic module unstable name.</br>
-To `com.example.foo`, the `named module` stable name.
+The modified version will of course include the following `module-info` descriptor, and will qualify as a `named module`.
 
 ```java
-// original
+module com.example.foo {
+    exports com.example.foo;
+}
+```
+
+### Instruct our project to use the modularized jar
+
+Simply update the `requires` statement in the source files of the `baz` project.</br>
+From `foo`, the `automatic module` *unstable* name.</br>
+To `com.example.foo`, the `named module` *stable* name.
+
+```java
+// original using an automatic module
 module com.example.baz {
   requires foo;
 }
-// modified
+// modified using the new named module
 module com.example.baz {
   requires com.example.foo;
 }
@@ -189,11 +196,11 @@ module com.example.baz {
 A modification is also required in the test sources descriptor:
 
 ```java
-// original
+// original using an automatic module
 open module com.example.baz {
   requires foo;
 }
-// modified
+// modified using the new named module
 open module com.example.baz {
   requires com.example.foo;
 
@@ -203,11 +210,11 @@ open module com.example.baz {
 
 Note that for the test descriptor, we needed to add a `requires` directive for reading `org.junit.jupiter.api`.
 
-The reason we didn't need to do so before, is because `foo` was an `automatic module`, it can read all other modules from the modulepath.
+The reason we didn't need to do so before, is because as an `automatic module`, `foo` could read all the other modules from the modulepath.
 
 Meaning, it bridged between the modules `com.example.baz` and `org.junit.jupiter.api`, so we didn't need to explicitly make `com.example.baz` read `org.junit.jupiter.api`.
 
-Now that `com.example.foo` is a legit `named module` we need to explicitly require `org.junit.jupiter.api`.
+Now that `com.example.foo` is a legit `named module`, `com.example.baz` needs to explicitly require `org.junit.jupiter.api`.
 
 Failing to do so will result in a compilation error:
 
@@ -276,8 +283,8 @@ We now have the `target\fixedClasspath.txt` file with the content of the classpa
 
 #### Create a fixed modulepath
 
-We can accomplish this using the [gmavenplus plugin][13] to execute a small groovy script.</br>
-To better accommodate both Windows and Linux os families, we'll use the [os plugin][14] to create the `os.detected.name`.
+We can accomplish this by leveraging the [gmavenplus plugin][13] to execute a small groovy script.</br>
+To better accommodate both *Windows* and *Non-Windows* os families, we'll use the [os plugin][14] to create the `os.detected.name`.
 
 ```xml
 <extension>
@@ -378,7 +385,7 @@ Better yet, we can also use `moditect` to make `foo` stop exposing packages rela
 I had fun playing around with `JPMS`,</br>
 I hope you did too.
 
-You can check out the code for this playground of the tutorial in [Github][0].
+You can check out the code for this playground in [Github][0].
 
 **:wave: See you in the next blog post :wave:**
 
