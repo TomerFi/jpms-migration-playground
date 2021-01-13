@@ -2,7 +2,7 @@
 title: JPMS Migration Playground
 published: true
 description: Playing around with modularizing monolithic jars.
-tags: ["java", "programming", "jpms", "jigsaw"]
+tags: ["java", "jpms", "jigsaw", "maven"]
 ---
 
 ## Playing around with modularizing monolithic jars
