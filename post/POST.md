@@ -1,8 +1,9 @@
 ---
 title: JPMS Migration Playground
-published: true
+published: false
 description: Playing around with modularizing monolithic jars.
 tags: ["java", "jpms", "jigsaw", "maven"]
+cover_image: https://source.unsplash.com/B-x4VaIriRc
 ---
 
 ## Playing around with modularizing monolithic jars
